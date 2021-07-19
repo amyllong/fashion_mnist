@@ -1,4 +1,7 @@
+'''Used local data and changed input pipeline'''
+
 from icecream import ic
+import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -46,6 +49,21 @@ ic(test_images.shape)
 train_images = train_images / 255.0
 test_images = test_images / 255.0
 
+indexes = np.arange(train_images.shape[0])
+for _ in range(5): indexes = np.random.permutation(indexes) #shuffle 5 times
+train_images = train_images[indexes]
+train_labels = train_labels[indexes]
+
+val_count = 48000
+val_images = train_images[val_count:]
+val_labels = train_labels[val_count:]
+train_images = train_images[:val_count]
+train_labels = train_labels[:val_count]
+
+ic(train_images.shape)
+ic(val_images.shape)
+ic(test_images.shape)
+
 # Train_dataset
 train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_labels))\
            .shuffle(buffer_size=len(train_images))\
@@ -72,13 +90,23 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.fit(train_ds, batch_size = 64, epochs=5, steps_per_epoch=len(train_images)/64)
+#checkpoint added 
+mypath = './'
+model_path = 'model.{epoch:02d}-{val_loss:.2f}.h5'
+log_dir="./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+model_checkpoint_callback = [
+    tf.keras.callbacks.ModelCheckpoint(filepath=model_path, verbose=1, period=5),
+    tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+
+]
+
+model.fit(train_ds, batch_size = 64, epochs=5, steps_per_epoch=len(train_images)/64, validation_data=(val_images, val_labels), callbacks=[model_checkpoint_callback])
 
 test_loss, test_acc = model.evaluate(test_ds, verbose = 2, steps=len(test_images)/64)
 print('\nTest loss: ', test_loss)
 print('Test accuracy:', test_acc)
 
-
+model.save(model_path)
 
 try:
     del train_images, train_labels
