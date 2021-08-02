@@ -72,7 +72,6 @@ print(images[0].dtype)
 dataType = images[0].dtype
 dimension = 28
 
-images = images / 255.0
 #print()
 #ic(images[0])
 #ic(labels[0])
