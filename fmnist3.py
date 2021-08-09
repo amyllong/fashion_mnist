@@ -1,4 +1,4 @@
-from icecream import icecream
+from icecream import ic
 import tensorflow as tf
 
 import numpy as np
@@ -54,6 +54,7 @@ test_ds = tf.data.TFRecordDataset(record_file2).map(parse_and_decode)\
             .prefetch(buffer_size=64)\
             .repeat()
 
+
 model = tf.keras.Sequential()
 model.add(tf.keras.layers.Flatten(input_shape=(28,28,1)))
 model.add(tf.keras.layers.BatchNormalization())
@@ -67,10 +68,10 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.fit(train_ds, batch_size = 64, epochs=5, steps_per_epoch=200)
+model.fit(train_ds, batch_size = 64, epochs=5, steps_per_epoch=938)
 
 
-test_loss, test_acc = model.evaluate(test_ds, verbose = 2)
+test_loss, test_acc = model.evaluate(test_ds, verbose = 2, steps=157)
 print('\nTest accuracy:', test_acc)
 
 try:
