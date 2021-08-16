@@ -1,23 +1,21 @@
 from icecream import ic
+from numpy import testing
 import tensorflow as tf
-
 import numpy as np
 import matplotlib.pyplot as plt
 
-import os
-import cv2
-from tensorflow.core.framework.types_pb2 import DataType
+#from sklearn.model_selection import train_test_split
 
-from mpl_toolkits.axes_grid1 import ImageGrid
+from tensorflow.core.framework.types_pb2 import DataType
 
 import convert_tfrecord2
 
 record_file = 'fmnistTrain.tfrecords'
-dataset = tf.data.TFRecordDataset(record_file, buffer_size=100)
+dataset = tf.data.TFRecordDataset(record_file)
 dataType = convert_tfrecord2.getDataType()
 
 record_file2 = 'fmnistTest.tfrecords'
-dataset2 = tf.data.TFRecordDataset(record_file2, buffer_size=100)
+dataset2 = tf.data.TFRecordDataset(record_file2)
 
 def parse_record(record):
     name_to_features = {
@@ -34,7 +32,7 @@ def decode_record(record):
     label = record['label']
     dimension = record['dimension']
     image = tf.reshape(image, (dimension, dimension, 1))
-    image = tf.image.random_flip_up_down(image, seed=None)
+    image = tf.image.random_flip_left_right(image, seed=None)
     image = tf.cast(image, tf.float32) / 255.0
     return (image, label)
 
@@ -43,16 +41,19 @@ def parse_and_decode(record):
     decoded_record = decode_record(parsed_record)
     return decoded_record
 
-train_ds = tf.data.TFRecordDataset(record_file).map(parse_and_decode)\
+train_ds = dataset.map(parse_and_decode)\
            .shuffle(buffer_size=10000)\
            .batch(batch_size=64)\
            .prefetch(buffer_size=64)\
            .repeat()
 
-test_ds = tf.data.TFRecordDataset(record_file2).map(parse_and_decode)\
+test_ds = dataset2.map(parse_and_decode)\
             .batch(batch_size=64)\
             .prefetch(buffer_size=64)\
             .repeat()
+
+samples = [2, 37, 582, 3029]
+
 
 
 model = tf.keras.Sequential()
@@ -68,11 +69,36 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.fit(train_ds, batch_size = 64, epochs=5, steps_per_epoch=938)
+model_path = 'model1.h5'
+model_checkpoint_callback = [
+    tf.keras.callbacks.ModelCheckpoint(filepath=model_path, verbose=1, period=5),
+]
+
+#model.fit(train_ds, batch_size = 64, epochs=5, steps_per_epoch=938)
 
 
-test_loss, test_acc = model.evaluate(test_ds, verbose = 2, steps=157)
-print('\nTest accuracy:', test_acc)
+#test_loss, test_acc = model.evaluate(test_ds, verbose = 2, steps=157)
+#rint('\nTest loss: ', test_loss)
+#print('Test accuracy:', test_acc)
+
+#model.save(model_path)
+
+'''reconstructed_model = tf.keras.models.load_model(model_path)
+
+test_input = np.random.random((128, 28, 28))
+target_input = np.random.random((128, 28, 28))
+model.fit(test_input, target_input)
+
+#check the model
+np.testing.assert_allclose(model.predict(test_input), reconstructed_model.predict(test_input))'''
+
+reconstructed_model = tf.keras.models.load_model(model_path)
+print(model.predict(train_ds, steps = 10).argmax(1))
+print(reconstructed_model.predict(train_ds, steps = 10).argmax(1))
+
+
+
+
 
 try:
     del train_ds
