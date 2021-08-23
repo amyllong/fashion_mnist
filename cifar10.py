@@ -71,7 +71,7 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 #train the model
-model.fit(train_ds, batch_size = 64, epochs=60, steps_per_epoch=938)
+model.fit(train_ds, batch_size = 64, epochs=60, steps_per_epoch=782)
 
 #evaluate the model, aka test it
 test_loss, test_acc = model.evaluate(test_ds, verbose = 2, steps=157)
