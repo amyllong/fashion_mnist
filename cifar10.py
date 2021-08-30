@@ -70,10 +70,49 @@ model.compile(optimizer='adam',
               loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
+model_path = 'model.h5'
+model_checkpoint_callback = [
+    tf.keras.callbacks.ModelCheckpoint(filepath=model_path, verbose=1, period=5)
+]
+
 #train the model
 model.fit(train_ds, batch_size = 64, epochs=60, steps_per_epoch=782)
 
-#evaluate the model, aka test it
-test_loss, test_acc = model.evaluate(test_ds, verbose = 2, steps=157)
-print('\nTest loss: ', test_loss)
-print('Test accuracy:', test_acc)
+#save model
+model.save(model_path)
+
+#predict the model
+def test_predict():
+    images = []
+    root_folder = './cifar10/test/0'
+    count = 0
+    for filename in os.listdir(root_folder):
+        img = cv2.imread(os.path.join(root_folder, filename), 0)
+        if img is not None:
+            images.append(img)
+        count += 1
+        if count == 9:
+            return np.array(images)
+
+images = test_predict()
+
+for image in images:
+    image.reshape(32, 32, 3)
+    image = tf.cast(image, tf.float32) / 255.0
+
+reconstructed_model = tf.keras.models.load_model(model_path)
+print('\n Without argmax')
+print(model.predict(images))
+print(reconstructed_model.predict(images))
+print('\n With argmax')
+print(model.predict(images).argmax(1))
+print(reconstructed_model.predict(images).argmax(1))
+
+#clear everything
+try:
+    del train_ds
+    del test_ds
+    print('Clear previously loaded data.')
+except:
+    pass
+############################################## Check the images
