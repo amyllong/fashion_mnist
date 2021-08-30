@@ -30,7 +30,7 @@ for folder in folders:
     labels = labels + temp_labels
 
 ##########
-def _bytes_feature(value):
+'''def _bytes_feature(value):
     """Returns a bytes_list from a string / byte."""
     if isinstance(value, type(tf.constant(0))):
         value = value.numpy()  # BytesList won't unpack a string from an EagerTensor.
@@ -51,7 +51,7 @@ def image_example(image, label, dimension):
         'label': _int64_feature(label),
         'image_raw': _bytes_feature(image.tobytes()),
     }
-    return tf.train.Example(features=tf.train.Features(feature=feature))
+    return tf.train.Example(features=tf.train.Features(feature=feature))'''
 
 record_file = 'cifar10Test.tfrecords'
 dimension = 32
@@ -60,13 +60,13 @@ dataType = images[0].dtype
 def getDataType():
     return dataType
 
-#write the tfrecord file
+'''#write the tfrecord file
 with tf.io.TFRecordWriter(record_file) as writer:
    for i in range(len(images)):
       image = images[i]
       label = labels[i]
       tf_example = image_example(image, label, dimension)
-      writer.write(tf_example.SerializeToString())
+      writer.write(tf_example.SerializeToString())'''
 
 #read in TFRecord file
 dataset = tf.data.TFRecordDataset(record_file, buffer_size=100)
@@ -86,6 +86,8 @@ def decode_record(record):
     label = record['label']
     dimension = record['dimension']
     image = tf.reshape(image, (dimension, dimension, 3))
+    image = tf.image.random_brightness(image, max_delta=0.2, seed=None)
+    image = tf.clip_by_value(image, clip_value_min=0.0, clip_value_max=1.0)
     return (image, label)
 
     
