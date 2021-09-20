@@ -33,7 +33,9 @@ def decode_record(record):
     dimension = record['dimension']
     image = tf.reshape(image, (dimension, dimension, 3))
     image = tf.image.random_flip_left_right(image, seed=None)
+    image = tf.image.random_brightness(image, max_delta=0.3, seed=None)
     image = tf.cast(image, tf.float32) / 255.0
+    image = tf.clip_by_value(image, clip_value_min=0.0, clip_value_max=1.0)
     return (image, label)
 
 #combine parse and decode 
