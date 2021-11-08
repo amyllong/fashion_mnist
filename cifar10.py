@@ -3,7 +3,7 @@ import numpy as np
 import os
 import cv2
 
-from icecream import ic
+#from icecream import ic
 
 from tensorflow.core.framework.types_pb2 import DataType
 import cifar_tfrecord
